@@ -63,6 +63,7 @@ class Shortcodes
         return call_user_func_array($ShortcodeHandle, array($atts, $content));
     }
 
+    /* This method uses regex that needs improvements */
     private function getAttributes($raw)
     {
         if ( !$raw || !trim($raw) )
