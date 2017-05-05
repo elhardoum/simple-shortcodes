@@ -68,16 +68,58 @@ class Shortcodes
         if ( !$raw || !trim($raw) )
             return array();
 
-        $raw = preg_replace('/(\' |" )/si', ' ', $raw);
-        $raw = preg_replace('/(="|=\')/si', '=', $raw);
-        $raw = preg_replace('/("$|\'$)/si', '', $raw);
-        $raw = trim($raw);
-        $raw = preg_replace('/\s/si', '&', $raw);
+        global $ShortcodesAttributes;
+        $ShortcodesAttributes = array();
 
-        parse_str($raw, $atts);
-        unset($atts['/']);
-        
-        return $atts;
+        $raw = preg_replace_callback('/\s[a-zA-Z_1-9]+\="(.*?)"/si', function($m){
+            global $ShortcodesAttributes;
+            preg_match('/[a-zA-Z_1-9]+\=/si', $m[0], $attrib);
+            $attrib = preg_replace('/=$/si', '', array_shift($attrib));
+            $ShortcodesAttributes[$attrib] = isset($m[1]) ? $m[1] : null;
+        }, $raw);
+
+        $raw = preg_replace_callback('/\s[a-zA-Z_1-9]+\=\'(.*?)\'/si', function($m){
+            global $ShortcodesAttributes;
+            preg_match('/[a-zA-Z_1-9]+\=/si', $m[0], $attrib);
+            $attrib = preg_replace('/=$/si', '', array_shift($attrib));
+            $ShortcodesAttributes[$attrib] = isset($m[1]) ? $m[1] : null;
+        }, $raw);
+
+        $raw = preg_replace_callback('/[a-zA-Z_1-9]+\=(.*?)([^(\z|\s)]*)/si', function($m){
+            global $ShortcodesAttributes;
+            preg_match('/[a-zA-Z_1-9]+\=/si', $m[0], $attrib);
+            $attrib = preg_replace('/=$/si', '', array_shift($attrib));
+            $ShortcodesAttributes[$attrib] = isset($m[1]) ? $m[1] : null;
+        }, $raw);
+
+        $raw = trim($raw);
+
+        if ( $raw && explode(' ', $raw) ) {
+            $exp = explode(' ', $raw);
+            $exp = array_filter($exp);
+
+            array_walk($exp, function($v, $k){
+                global $ShortcodesAttributes;
+                $ShortcodesAttributes[$v] = null;
+            });
+        }
+
+        unset($GLOBALS['ShortcodesAttributes']);
+
+        return $ShortcodesAttributes;
+
+        // $raw = preg_replace('/(\' |" )/si', ' ', $raw);
+        // $raw = preg_replace('/(="|=\')/si', '=', $raw);
+        // $raw = preg_replace('/("$|\'$)/si', '', $raw);
+        // $raw = trim($raw);
+        // $raw = preg_replace('/\s/si', '&', $raw);
+
+        // echo var_dump($raw);
+
+        // parse_str($raw, $atts);
+        // unset($atts['/']);
+
+        // return $atts;
     }
 
     private function getContent($raw)
