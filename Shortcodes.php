@@ -75,6 +75,8 @@ class Shortcodes
         $raw = preg_replace('/\s/si', '&', $raw);
 
         parse_str($raw, $atts);
+        unset($atts['/']);
+        
         return $atts;
     }
 
